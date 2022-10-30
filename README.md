@@ -7,10 +7,10 @@
 ### 9-dof
 - **Pololu MinIMU-9 v5 9DOF** (LSM6DS33 + LIS3MDL)
 - **Arduino Nano 33 BLE** (built-in LSM9DS1)
+- **BNO055*** (Adafruit module)
 
 ### Not included 9-dof:
 *Tested in 2021*
-- BNO055*
 - ICM-20948* 
 
 ## Methods of test:
@@ -19,7 +19,7 @@
 - We used similar calibration method for magnetometer.
 
 ## Notes:
-- **For demanding projects, to be honest, if you can and your project can afford it, just buy a Bosch* **BNO055** *(or something equivalent) sensor module for Arduino. The real-time calibration and build-in AHRS fusion algorithm saves a lot of headaches and time. It does matter when you have to regularly change device orienation axis, other sensors mentioned just lose their orientation.*
+
 - ***ICM-20948** *is a successor to MPU-6050/MPU-9250. Sparkfun has a library that leverages the same DMP algorithm. The problem is product availability.*
 - *Stick to quaternions in your code for calculations, convert to euler angles at the very end to avoid gimbal lock.*
 - *Check your calibration whenever the sensor is drifting when values changes without moving the device. However, remember that 6-dof Z-axis will never be correct comparing to 9-dof.*
@@ -69,3 +69,14 @@ There are various kinds of libraries,
 
 ## Arduino Nano 33 BLE
 *The Arduino LSM9DS1 library is mediocre, it lacks features beside getting the data.*
+
+## BNO055
+### Calibration:
+Calibration is done internally on startup. You can print calibration status, numbers between 0-3 are calibration levels.
+
+### Angles:
+Reading quaternions is recommended by manufacturer. Later you can convert them to euler angles.
+
+### Notes:
+- **For demanding projects, to be honest, if you can and your project can afford it, just buy a Bosch* **BNO055** *(or equivalent) sensor module for Arduino. The real-time calibration and build-in AHRS fusion algorithm saves a lot of headaches and time. Especially it does matter when you have to frequently change device orienation axis, based on my observation, other sensors mentioned just lose their orientation. However, for basic scenarios there is no reason to buy it.*
+- *This particular version doesn't have any double tap, gesture nor pedometer sensor.*
