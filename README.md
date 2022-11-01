@@ -97,8 +97,9 @@ LSM9DS1 has different direction of X and Y axes. You can test them on your own b
 - Different AHRS algorithm? Adafruit contains Mahony, Madgwick and NXP Sensor Fusion.
 
 ### Notes:
-- *Great all-in-one solution if you have to use Bluetooth LE. The Adafruit Feather BLE can be an alternative but I remember that BT worked significantly slower. However, Feather BLE includes Li-Po battery circuit.*
-- *The Arduino LSM9DS1 library is mediocre, it lacks features beside getting the data and it doesn't play well with Adafruit Libraries.*
+- *Great all-in-one solution if you have to use Bluetooth LE. The Adafruit Feather BLE can be an alternative but I remember that BT worked significantly slower. On the other hand, Feather BLE includes Li-Po battery circuit.*
+- *The Arduino LSM9DS1 library is mediocre, it lacks features except getting the data and it doesn't play well with Adafruit Libraries.*
+- *LSM9DS1 documentation misleads it has click/double click detection.*
 
 ## BNO055
 ### Calibration:
