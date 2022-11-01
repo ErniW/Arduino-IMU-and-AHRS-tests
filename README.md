@@ -7,13 +7,9 @@
 
 ### 9-dof
 - **Pololu MinIMU-9 v5 9DOF** (LSM6DS33 + LIS3MDL)
-- **Arduino Nano 33 BLE** (built-in LSM9DS1)
+- **LSM9DS1** in Arduino Nano 33 BLE
 - **BNO055** (Adafruit module)
-
-### Not included 9-dof:
-- ICM-20948* *Tested in 2021*
-
-*ISM330DHCX, MinIMU-9 requires *
+- *ICM-20948 *Not included, tested in 2021*
 
 ## Methods of test:
 - We were testing the devices for IMU and full AHRS with magnetometer.
@@ -21,12 +17,12 @@
 - We used similar calibration method for magnetometer.
 
 ## Notes:
-- *Check your calibration whenever the sensor is drifting, it happens when values change without movement. However, remember that 6-dof Z-axis will never be correct comparing to 9-dof. Without proper calibration it just won't work.*
-- *Stick to quaternions in your code for calculations, convert to euler angles at the very end to avoid gimbal lock.*
-- *Raw values can be useful to detect if object is shaking, moving or tilting toward one of its side.* **Sometimes you don't have to compute the euler angles.** *Raw values aren't in SI units (conversion is necessary for AHRS libraries). Furthermore, some libraries calculate angles in radians. Therfore, for example in BNO055 code we multiply by 57.2957795 to get degrees.*
-- *On a flat ground accelerometer will always show gravity acceleration on Z-axis (it shouldn't be 0.*
+- **Check your calibration whenever the sensor is drifting**, *it happens when values change without movement. However, remember that 6-dof Z-axis will never be correct comparing to 9-dof. Without proper calibration it just won't work.*
+- **Stick to quaternions in your code for calculations, convert to euler angles at the very end to avoid gimbal lock.**
+- *Raw values can be useful to detect if object is shaking, moving or tilting toward one of its side.* **Sometimes you don't have to compute the euler angles.** 
+- *Raw values aren't in SI units (conversion is necessary for AHRS libraries). Furthermore, some libraries calculate angles in radians. Therfore, for example in BNO055 code we multiply by 57.2957795 to get degrees.*
 - *We still didn't figure out how automatic magnetometer calibration routine should be done.*
-- *AHRS libraries are too slow*
+- **Any AHRS algorithm is too demanding for Arduino UNO**
 
 
 ## Some additional features tested:
@@ -47,9 +43,9 @@ Open the *MPU6050_2_raw_values_offsets* example. There are two ways to calibrate
 **Adafruit Unified sensors and AHRS library** requires its Adafruit Calibration Library. We found it more difficult to use and measurements are worse than DMP.
 
 ### Notes:
-- *MPU-6050 is the cheapest among all. Usually cheapest sensors have significantly lower quality but not in this case thanks to DMP.*
+- **MPU-6050 is the cheapest among all. Usually cheapest sensors have significantly lower quality but not in this case thanks to DMP.**
 - *For prototyping, in most cases MPU-6050 is enough if you need to measure tilt angle without relative heading (it doesn't have a magnetometer to do so). The MPU-9250 and ICM-20948 have magnetometer included.*
-- *DMP computes Euler angles or quaternions without wasting resources of your Arduino.*
+- **DMP computes Euler angles or quaternions without wasting resources of your Arduino.**
 - *Using Mahony filter is not even close to quality of DMP.*
 - ***ICM-20948** *is a successor to MPU-6050/MPU-9250. Sparkfun has a library that leverages the same DMP algorithm for 9-dof. The problem is product availability.*
 
@@ -60,12 +56,11 @@ Open the *MPU6050_2_raw_values_offsets* example. There are two ways to calibrate
 
 ### Angles:
 **We shall use the Adafruit AHRS library:**
--
 
 ### Notes: 
 - *ISM330DHCX is an industrial-grade version of LSM6DSOX with improved durability and gyro range.*
 - *ISM330DHCX has built-in tilt direction, double tap, pedometer and free falling detection.*
-- *ISM330DHCX doesn't contain DMP but has Finite State Machine for machine learning and gesture recognition. For AHRS fusion algorithm STM provides iNEMO engine software but unfortunately it seems they removed it. Anyway, these features aren't possible to use on Arduino platform so it's not worth buying.*
+- *ISM330DHCX doesn't contain DMP but has Finite State Machine for machine learning and gesture recognition. For AHRS fusion algorithm STM provides iNEMO engine software but unfortunately it seems they removed it.* **Anyway, these features aren't possible to use on Arduino platform so it's not worth buying.**
 
 ## Pololu MinIMU-9 v5 9DOF
 ### Calibration:
@@ -80,7 +75,7 @@ There are libraries from Pololu, Sparkfun and Adafruit. Couldn't decide which is
 ### Calibration:
 **Because we are using Arduino Nano 33 BLE we had to prepare a custom code to communicate with Motioncal and to calibrate accelerometer and gyroscope (Adafruit library won't detect the sensor). If you are using Adafruit LSM9DS1 (or LSM9DS0) as a standalone module you can use Adafruit Unified Sensor Library**
 1. Magnetometer calibration is done via MotionCal. Upload the calibration code and open the app.
-2. Accelerometer and Gyroscope is calibrated via Adafruit library.
+2. Accelerometer and Gyroscope is calibrated via included code.
 3. Write these values into *LSM9DS1_4_IMU*.
 
 ### Angles:
@@ -102,12 +97,12 @@ LSM9DS1 magnetometer has different direction of X and Y axes. You can test them 
 
 ## BNO055
 ### Calibration:
-Calibration is done internally on startup. You can print calibration status, numbers between 0-3 are calibration levels.
+**Calibration is done internally on startup and adapts on runtime.** You can print calibration status, numbers between 0-3 are calibration levels.
 
 ### Angles:
 Reading quaternions is recommended by manufacturer. Later you can convert them to euler angles.
 
 ### Notes:
-- *For demanding projects, to be honest, if you can and your project can afford it, just buy a Bosch* **BNO055** *(or equivalent) sensor module for Arduino. The real-time calibration and build-in AHRS fusion algorithm saves a lot of headaches and time. Especially it does matter when you have to frequently change device orienation axis, based on my observation, other sensors mentioned just lose their orientation. However, for basic scenarios there is no reason to buy it.*
+- *For demanding projects, to be honest, if you can and your project can afford it, just buy BNO055 (or equivalent) sensor module for Arduino.* **The real-time calibration and build-in AHRS fusion algorithm saves a lot of headaches and time.** *Especially it does matter when you have to frequently change device orienation axis, based on my observation, other sensors mentioned just lose their orientation. However, for basic scenarios there is no reason to buy it.*
 - *This particular version doesn't have any double tap, gesture nor pedometer sensor.*
-- *Computations are made internally so it doesn't waste Arduino resources.*
+- **Computations are made internally so it doesn't waste Arduino resources.**
