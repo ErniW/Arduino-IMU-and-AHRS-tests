@@ -19,23 +19,32 @@ void setup() {
   int samples = 10000;
 
   Serial.println("Starting Calibration...");
+  Serial.println("Do not move the device");
   delay(4000);
   Serial.println("Calibrating...");
 
   for(int i=0; i < samples; i++){
+
+    float gx, gy, gz;
+    IMU.readGyroscope(gx, gy, gz);
+
+    //Quick and dirty way to remove spikes from gyro measurement.
+    if( gx > 8 || gy > 8 || gz > 8){
+      i--;
+      delay(1);
+      continue;
+    }
+
+    totalGyroX += gx;
+    totalGyroY += gy;
+    totalGyroZ += gz;
+
     float ax, ay, az;
     IMU.readAcceleration(ax, ay, az);
 
     totalAccelX += ax;
     totalAccelY += ay;
     totalAccelZ += az - 0.98;
-
-    float gx, gy, gz;
-    IMU.readGyroscope(gx, gy, gz);
-
-    totalGyroX += gx;
-    totalGyroY += gy;
-    totalGyroZ += gz;
 
     delay(1);
   }
