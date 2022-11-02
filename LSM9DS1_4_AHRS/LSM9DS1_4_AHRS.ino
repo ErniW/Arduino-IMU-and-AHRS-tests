@@ -24,6 +24,12 @@ void setup() {
   }
 
   filter.begin(updateRate);
+  
+  Wire1.begin();
+  Wire1.beginTransmission(0x1e);
+  Wire1.write(0x20);
+  Wire1.write(0x9e);
+  Wire1.endTransmission();
 }
 
 unsigned long timestamp = 0;

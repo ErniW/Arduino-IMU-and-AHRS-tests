@@ -1,11 +1,11 @@
 #include <Adafruit_ISM330DHCX.h>
 
-Adafruit_ISM330DHCX ism330dhcx;
+Adafruit_ISM330DHCX ism;
 
 void setup() {
   Serial.begin(115200);
 
-  if(!ism330dhcx.begin_I2C()) {
+  if(!ism.begin_I2C()) {
     Serial.println("ISM330DHCX connection error");
   }
 }
@@ -14,7 +14,7 @@ void loop() {
   sensors_event_t accel;
   sensors_event_t gyro;
   sensors_event_t temp;
-  ism330dhcx.getEvent(&accel, &gyro, &temp);
+  ism.getEvent(&accel, &gyro, &temp);
 
   Serial.print("Accel XYZ: ");
   Serial.print("\t");

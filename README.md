@@ -9,21 +9,20 @@
 - **Pololu MinIMU-9 v5 9DOF** (LSM6DS33 + LIS3MDL)
 - **LSM9DS1** in Arduino Nano 33 BLE
 - **BNO055** (Adafruit module)
-- *ICM-20948 *Not included, tested in 2021*
+- *ICM-20948 *Not included, tested as 6-dof in 2021*
 
 ## Methods of test:
-- We were testing the devices for IMU and full AHRS with magnetometer.
-- We tried to test in similar conditions.
-- We used similar calibration method for magnetometer.
+- Tests were made in similar conditions.
+- We used similar calibration method for magnetometer. MotionCal is available for download here: https://www.pjrc.com/store/prop_shield.html
 
 ## Notes:
+- **6-dof IMUs are enough to measure tilt angle. For yaw/Z-axis rotation 9-dof is necessary**
 - **Check your calibration whenever the sensor is drifting**, *it happens when values change without movement. However, remember that 6-dof Z-axis will never be correct comparing to 9-dof. Without proper calibration it just won't work.*
 - **Stick to quaternions in your code for calculations, convert to euler angles at the very end to avoid gimbal lock.**
 - *Raw values can be useful to detect if object is shaking, moving or tilting toward one of its side.* **Sometimes you don't have to compute the euler angles.** 
 - *Raw values aren't in SI units (conversion is necessary for AHRS libraries). Furthermore, some libraries calculate angles in radians. Therfore, for example in BNO055 code we multiply by 57.2957795 to get degrees.*
 - *We still didn't figure out how automatic magnetometer calibration routine should be done.*
 - **Any AHRS algorithm is too demanding for Arduino UNO**
-
 
 ## Some additional features tested:
 - Double Tap gesture
@@ -36,7 +35,7 @@
 ### Calibration:
 Open the *MPU6050_2_raw_values_offsets* example. There are two ways to calibrate the sensor:
 - Use `CalibrateAccel` and `CalibrateGyro` to do that automatically.
-- Hard-coding: Place the device on a flat surface. Run the calibration code from MPU6050 library (*IMU_Zero*). Write down the averaged offsets and use these offsets (eventually deleting the auto calibration).
+- Hard-coding: Place the device on a flat surface. Run the calibration code from MPU6050 library (*IMU_Zero*). Write down the averaged offsets and use these offsets in our sketch (eventually deleting the auto calibration).
 ### Angles:
 **Digital Motion Processor (DMP)** calculates the euler angles or quaternions directly in sensor without wasting resources on your Arduino. You can use the library's *MPU6050_DMP6_using_DMP_V6v12* but you need to add *`Wire.setWireTimeout(3000, true);`* after *`Wire.setClock(400000);`* to prevent sketch from randomly freezing. *We also prepared a simplified sketch without unnecessary configurations.*
 
@@ -47,53 +46,68 @@ Open the *MPU6050_2_raw_values_offsets* example. There are two ways to calibrate
 - *For prototyping, in most cases MPU-6050 is enough if you need to measure tilt angle without relative heading (it doesn't have a magnetometer to do so). The MPU-9250 and ICM-20948 have magnetometer included.*
 - **DMP computes Euler angles or quaternions without wasting resources of your Arduino.**
 - *Using Mahony filter is not even close to quality of DMP.*
-- ***ICM-20948** *is a successor to MPU-6050/MPU-9250. Sparkfun has a library that leverages the same DMP algorithm for 9-dof. The problem is product availability.*
+- ***ICM-20948** *is a successor to MPU-6050/MPU-9250. Sparkfun has a library that leverages the same DMP algorithm for 9-dof. The problem is product availability, however there are concerns that Invensense doesn't use 9-dof for its DMP. We can't investigate it until we get one.*
 
 ## ISM330DHCX
 ### Calibration:
-1. Use **Adafruit sensorlab** *examplename* to calibrate gyroscope and accelerometer.
-2. Write the detected offsets into the `ISM330DHCX_2_IMU` code. Adafruit provides a code to store calibrations on EEPROM (or SD card) but for our case it's unnecessary.
+1. Use **Adafruit sensorlab** *gyro_zerorate_simplecal* to calibrate gyroscope. It won't store the values on EEPROM or SD card. *It takes a long time to compile.*
+2. Write the detected offsets into the *ISM330DHCX_2_IMU* code. Remember that values are in rad/s so we have to do multiplication.
 
 ### Angles:
-**We shall use the Adafruit AHRS library:**
+**We shall use the Adafruit AHRS library. Remember that without the magnetometer only roll and pitch makes sense. **
 
 ### Notes: 
 - *ISM330DHCX is an industrial-grade version of LSM6DSOX with improved durability and gyro range.*
 - *ISM330DHCX has built-in tilt direction, double tap, pedometer and free falling detection.*
-- *ISM330DHCX doesn't contain DMP but has Finite State Machine for machine learning and gesture recognition. For AHRS fusion algorithm STM provides iNEMO engine software but unfortunately it seems they removed it.* **Anyway, these features aren't possible to use on Arduino platform so it's not worth buying.**
+- *ISM330DHCX doesn't contain DMP but has Finite State Machine and Machine Learning Core for gesture recognition. ST provides iNEMO engine AHRS fusion algorithm but unfortunately it seems they removed it.* **Anyway, advanced features aren't possible to use on Arduino platform so it's not worth buying.**
+- *Data is less noisy compared to MPU-6050.*
+- *It's compatible with Adafruit LSM6DS library. Unfortunately things like pedometer and double tap aren't implemented. I made my own implementation.*
 
 ## Pololu MinIMU-9 v5 9DOF
+**You can use the adafruit library but the i2c address must be changed to 0x6b `lsm.begin_I2C(0x6b)` (Or you can solder the SA0 pin to gnd).**
+
 ### Calibration:
 Can be done in two ways:
-- Via MotionCal. Upload the calibration code and open the app. Unfortunately, it wont work on Arduino UNO.
-- 
+- Magnetometer: MotionCal. Upload the calibration code and open the app. Unfortunately, it wont work on Arduino UNO.
+- Accelerometer and Gyroscope:
 
 ### Angles:
 There are libraries from Pololu, Sparkfun and Adafruit. Couldn't decide which is better.
 
+
+
+### Notes:
+- *It's the same thing you have on Adafruit Feather BLE.*
+- *You can use Adafruit library to use pedometer.*
+
+
 ## Arduino Nano 33 BLE (LSM9DS1)
 ### Calibration:
 **Because we are using Arduino Nano 33 BLE we had to prepare a custom code to communicate with Motioncal and to calibrate accelerometer and gyroscope (Adafruit library won't detect the sensor). If you are using Adafruit LSM9DS1 (or LSM9DS0) as a standalone module you can use Adafruit Unified Sensor Library**
-1. Magnetometer calibration is done via MotionCal. Upload the calibration code and open the app.
-2. Accelerometer and Gyroscope is calibrated via included code.
-3. Write these values into *LSM9DS1_4_IMU*.
+1. Magnetometer: MotionCal. Upload the calibration code and open the app.
+2. Accelerometer and Gyroscope: calibrated via included code.
+3. Write these values into *LSM9DS1_4_AHRS*.
 
 ### Angles:
 We are using a sketch which sends quaternions to Adafruit web app https://adafruit.github.io/Adafruit_WebSerial_3DModelViewer/ You can easily change to euler angles if you whish.
 
-The position becomes stable after a short time. Achieving zero-drift correct orientation seems impossible during frequent movements. 
+**The position becomes stable and eventually correct after a short time. Achieving zero-drift correct orientation seems impossible during frequent movements.**
 
-LSM9DS1 magnetometer has different direction of X and Y axes. You can test them on your own but to be honest it's impossible to see it on that app's Bunny which ones are correct.
+**The problem is the Yaw value - try rotating around Z-axis and after a few 360 degree rotations you see how delayed the movement is.** It's set to 20hz frequency which is slow for AHRS. We set the magnetometer Output Data Rate to 80hz and fast ODR `LSM9DS1_CTRL_REG1_M` and the performance mode. But we couldn't see the difference. Documentation https://www.st.com/resource/en/datasheet/lsm9ds1.pdf
+
+**Different frequency/update ratio somehow fixes the issue, check the difference in v2 version.**
+
+Furthermore, LSM9DS1 magnetometer has different direction of X and Y axes. *You can test them on your own but to be honest it's impossible to see it on that app's Bunny which ones are correct.*
 
 **Things that could improve the measurements:**
 - Improve calibration, apply something to additionaly reduce noise?
-- Measurement frequency ratio?
+- **Measurement frequency ratio?**
 - Different AHRS algorithm? Adafruit contains Mahony, Madgwick and NXP Sensor Fusion.
 
 ### Notes:
 - *Great all-in-one solution if you have to use Bluetooth LE. The Adafruit Feather BLE can be an alternative but I remember that BT worked significantly slower. On the other hand, Feather BLE includes Li-Po battery circuit.*
 - *The Arduino LSM9DS1 library is mediocre, it lacks features except getting the data and it doesn't play well with Adafruit Libraries.*
-- *LSM9DS1 documentation misleads it has click/double click detection.*
+- *LSM9DS1 documentation misleads it has click/double click detection. The sensor has movement and tilt detection available.*
 
 ## BNO055
 ### Calibration:

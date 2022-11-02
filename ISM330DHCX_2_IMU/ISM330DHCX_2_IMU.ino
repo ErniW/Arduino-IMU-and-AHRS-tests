@@ -1,33 +1,15 @@
-/*
-
-accel 0.1 -0.16 9.98
-gyro 0 / 0.01 -0.01 0
-
-*/
-
-
 #include <Adafruit_ISM330DHCX.h>
 #include <Adafruit_AHRS.h>
-#include <Adafruit_Sensor_Calibration.h>
 
-Adafruit_ISM330DHCX ism330dhcx;
-Adafruit_Sensor_Calibration_EEPROM calibration;
+Adafruit_ISM330DHCX ism;
 Adafruit_Mahony filter;
 
 void setup() {
   Serial.begin(115200);
 
-  if(!ism330dhcx.begin_I2C()) {
+  if(!ism.begin_I2C()) {
     Serial.println("ISM330DHCX connection error");
   }
-
-  calibration.accel_zerog[0] = 0.1;
-  calibration.accel_zerog[1] = -0.16;
-  //calibration.accel_zerog[2] = 9.98;
-
-  calibration.gyro_zerorate[0] = 0.01;
-  calibration.gyro_zerorate[1] = -0.01;
-  calibration.gyro_zerorate[2] = 0;
 
   filter.begin(20);
 }
@@ -36,10 +18,11 @@ void loop() {
   sensors_event_t accel;
   sensors_event_t gyro;
   sensors_event_t temp;
-  ism330dhcx.getEvent(&accel, &gyro, &temp);
+  ism.getEvent(&accel, &gyro, &temp);
 
-  calibration.calibrate(accel);
-  calibration.calibrate(gyro);
+  gyro.gyro.x -= -0.0024 * 57.2957795;
+  gyro.gyro.y -= -0.0098 * 57.2957795;
+  gyro.gyro.z -= 0.0024 * 57.2957795;
 
   filter.updateIMU(
     gyro.gyro.x,
@@ -60,6 +43,4 @@ void loop() {
   Serial.print('\t');
   Serial.print(yaw);
   Serial.println('\t');
-
-  delay(20);
 }
