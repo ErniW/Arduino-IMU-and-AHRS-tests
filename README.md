@@ -52,6 +52,8 @@ Open the *MPU6050_2_raw_values_offsets* example. There are two ways to calibrate
 ### Angles:
 We shall use the Adafruit AHRS library. Remember that without the magnetometer only roll and pitch makes sense.
 
+Testing with quaternions and Adafruit app. https://adafruit.github.io/Adafruit_WebSerial_3DModelViewer/
+
 ### Notes: 
 - *ISM330DHCX is an industrial-grade version of LSM6DSOX with many enhancements.*
 - *ISM330DHCX has built-in tilt direction, double tap, pedometer and free falling detection.*
