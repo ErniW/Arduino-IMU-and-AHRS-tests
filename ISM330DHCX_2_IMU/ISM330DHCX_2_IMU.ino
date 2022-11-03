@@ -7,7 +7,7 @@ Adafruit_Mahony filter;
 void setup() {
   Serial.begin(115200);
 
-  if(!ism.begin_I2C()) {
+  if(!ism.begin_I2C(0x6A)) {
     Serial.println("ISM330DHCX connection error");
   }
 

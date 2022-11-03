@@ -13,21 +13,17 @@
 
 ## Methods of test:
 - Tests were made in similar conditions.
-- We used similar calibration method for magnetometer. MotionCal is available for download here: https://www.pjrc.com/store/prop_shield.html
+- We used similar calibration method for magnetometer. MotionCal is available for download here: https://www.pjrc.com/store/prop_shield.html Accelerometer and Gyro is not working here.
 
 ## Notes:
 - **6-dof IMUs are enough to measure tilt angle. For yaw/Z-axis rotation 9-dof is necessary**
 - **Check your calibration whenever the sensor is drifting**, *it happens when values change without movement. However, remember that 6-dof Z-axis will never be correct comparing to 9-dof. Without proper calibration it just won't work.*
+- **Seems that algorithm sampling rate, timing and frequency of sensor's measurements is the key to success.**
 - **Stick to quaternions in your code for calculations, convert to euler angles at the very end to avoid gimbal lock.**
 - *Raw values can be useful to detect if object is shaking, moving or tilting toward one of its side.* **Sometimes you don't have to compute the euler angles.** 
 - *Raw values aren't in SI units (conversion is necessary for AHRS libraries). Furthermore, some libraries calculate angles in radians. Therfore, for example in BNO055 code we multiply by 57.2957795 to get degrees.*
 - *We still didn't figure out how automatic magnetometer calibration routine should be done.*
 - **Any AHRS algorithm is too demanding for Arduino UNO**
-
-## Some additional features tested:
-- Double Tap gesture
-- Free fall detection
-- ISM330DHCX finite state machine
 
 # Sensors usage:
 ## MPU-6050
@@ -54,32 +50,31 @@ Open the *MPU6050_2_raw_values_offsets* example. There are two ways to calibrate
 2. Write the detected offsets into the *ISM330DHCX_2_IMU* code. Remember that values are in rad/s so we have to do multiplication.
 
 ### Angles:
-**We shall use the Adafruit AHRS library. Remember that without the magnetometer only roll and pitch makes sense. **
+We shall use the Adafruit AHRS library. Remember that without the magnetometer only roll and pitch makes sense.
 
 ### Notes: 
-- *ISM330DHCX is an industrial-grade version of LSM6DSOX with improved durability and gyro range.*
+- *ISM330DHCX is an industrial-grade version of LSM6DSOX with many enhancements.*
 - *ISM330DHCX has built-in tilt direction, double tap, pedometer and free falling detection.*
 - *ISM330DHCX doesn't contain DMP but has Finite State Machine and Machine Learning Core for gesture recognition. ST provides iNEMO engine AHRS fusion algorithm but unfortunately it seems they removed it.* **Anyway, advanced features aren't possible to use on Arduino platform so it's not worth buying.**
 - *Data is less noisy compared to MPU-6050.*
 - *It's compatible with Adafruit LSM6DS library. Unfortunately things like pedometer and double tap aren't implemented. I made my own implementation.*
 
 ## Pololu MinIMU-9 v5 9DOF
-**You can use the adafruit library but the i2c address must be changed to 0x6b `lsm.begin_I2C(0x6b)` (Or you can solder the SA0 pin to gnd).**
+**You can use the adafruit library but the i2c address must be changed to 0x6b `lsm6ds33.begin_I2C(0x6b)` and `lis3mdl.begin_I2C(0x1E)`.**
+
+The magnetometer is a separate sensor on this board.
 
 ### Calibration:
-Can be done in two ways:
-- Magnetometer: MotionCal. Upload the calibration code and open the app. Unfortunately, it wont work on Arduino UNO.
-- Accelerometer and Gyroscope:
+1. Magnetometer: MotionCal. Upload the calibration code and open the app.
+2. Accelerometer and Gyroscope: calibrated via included code.
 
 ### Angles:
-There are libraries from Pololu, Sparkfun and Adafruit. Couldn't decide which is better.
-
-
+There are libraries for these sensors from Pololu, Sparkfun and Adafruit. Each of them works well but we will stick to Adafruit as we are using Adafruit AHRS library.
 
 ### Notes:
-- *It's the same thing you have on Adafruit Feather BLE.*
+- *It's the same sensor you have on Adafruit Feather BLE.*
+- *LIS3MDL magnetometer frequency is faster than magnetometer in LSM9DS1.*
 - *You can use Adafruit library to use pedometer.*
-
 
 ## Arduino Nano 33 BLE (LSM9DS1)
 ### Calibration:
@@ -93,7 +88,7 @@ We are using a sketch which sends quaternions to Adafruit web app https://adafru
 
 **The position becomes stable and eventually correct after a short time. Achieving zero-drift correct orientation seems impossible during frequent movements.**
 
-**The problem is the Yaw value - try rotating around Z-axis and after a few 360 degree rotations you see how delayed the movement is.** It's set to 20hz frequency which is slow for AHRS. We set the magnetometer Output Data Rate to 80hz and fast ODR `LSM9DS1_CTRL_REG1_M` and the performance mode. But we couldn't see the difference. Documentation https://www.st.com/resource/en/datasheet/lsm9ds1.pdf
+**The problem is the Yaw value - try rotating around Z-axis and after a few 360 degree rotations you see how delayed the movement is.** Magnetometer is set to 20hz frequency which is slow for AHRS. We've changed its Output Data Rate to 80hz and fast ODR `LSM9DS1_CTRL_REG1_M` and the performance mode. But we couldn't see the difference. Documentation https://www.st.com/resource/en/datasheet/lsm9ds1.pdf
 
 **Different frequency/update ratio somehow fixes the issue, check the difference in v2 version.**
 
@@ -111,7 +106,7 @@ Furthermore, LSM9DS1 magnetometer has different direction of X and Y axes. *You 
 
 ## BNO055
 ### Calibration:
-**Calibration is done internally on startup and adapts on runtime.** You can print calibration status, numbers between 0-3 are calibration levels.
+**Calibration is done internally on startup and adapts on runtime.** You can print calibration status, numbers between 0-3 are calibration grades.
 
 ### Angles:
 Reading quaternions is recommended by manufacturer. Later you can convert them to euler angles.
