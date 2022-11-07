@@ -23,7 +23,7 @@
 - *Raw values can be useful to detect if object is shaking, moving or tilting toward one of its side.* **Sometimes you don't have to compute the euler angles.** 
 - *Raw values aren't in SI units (conversion is necessary for AHRS libraries), through some libraries we get the SI units by default but some of them calculate angles in radians. Therfore, for example in BNO055 code we multiply by 57.2957795 to get degrees.*
 - *We still didn't figure out how automatic magnetometer calibration routine should be done.*
-- **Any AHRS algorithm is too demanding for Arduino UNO**
+- **Any AHRS algorithm is too demanding for Arduino UNO** *Unless it's the only thing you want to do and not be very precise.*
 
 # Sensors usage:
 ## MPU-6050
@@ -57,9 +57,9 @@ Testing with quaternions and Adafruit app. https://adafruit.github.io/Adafruit_W
 ### Notes: 
 - *ISM330DHCX is an industrial-grade version of LSM6DSOX with many enhancements.*
 - *ISM330DHCX has built-in tilt direction, double tap, pedometer and free falling detection.*
-- *ISM330DHCX doesn't contain DMP but has Finite State Machine and Machine Learning Core for gesture recognition. ST provides iNEMO engine AHRS fusion algorithm but unfortunately it seems they removed it.* **Anyway, advanced features aren't possible to use on Arduino platform so it's not worth buying.**
+- *ISM330DHCX doesn't contain DMP but has Finite State Machine and Machine Learning Core for gesture recognition. ST provides iNEMO engine AHRS fusion algorithm but unfortunately it seems they removed it.* **Anyway, advanced features aren't possible to use on Arduino platform so it's not worth buying in our case.**
 - *Data is less noisy compared to MPU-6050.*
-- *It's compatible with Adafruit LSM6DS library. Unfortunately things like pedometer and double tap aren't implemented. I made my own implementation.*
+- *It's compatible with Adafruit LSM6DS library. Unfortunately things like pedometer and double tap aren't implemented. I made my own implementation but it requires basic understanding of bare-metal programming.*
 
 ## Pololu MinIMU-9 v5 9DOF
 **You can use the adafruit library but the i2c address must be changed to 0x6b `lsm6ds33.begin_I2C(0x6b)` and `lis3mdl.begin_I2C(0x1E)`.**
