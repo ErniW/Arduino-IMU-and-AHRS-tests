@@ -9,7 +9,7 @@ Adafruit_LIS3MDL lis3mdl;
 Adafruit_Mahony filter;
 
 int updateRate = 50;
-int printEveryUpdate = 5;
+int printEveryUpdate = 3;
 
 unsigned long timestamp = 0;
 int counter = 0;
