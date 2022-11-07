@@ -17,11 +17,11 @@
 
 ## Notes:
 - **6-dof IMUs are enough to measure tilt angle. For yaw/Z-axis rotation 9-dof is necessary**
-- **Check your calibration whenever the sensor is drifting**, *it happens when values change without movement. However, remember that 6-dof Z-axis will never be correct comparing to 9-dof. Without proper calibration it just won't work.*
+- **Check your calibration whenever the sensor is drifting. Without proper calibration it just won't work.** *It happens when values change without movement. However, remember that 6-dof Z-axis will never be correct comparing to 9-dof.*
 - **Seems that algorithm sampling rate, timing and frequency of sensor's measurements is the key to success.**
 - **Stick to quaternions in your code for calculations, convert to euler angles at the very end to avoid gimbal lock.**
 - *Raw values can be useful to detect if object is shaking, moving or tilting toward one of its side.* **Sometimes you don't have to compute the euler angles.** 
-- *Raw values aren't in SI units (conversion is necessary for AHRS libraries). Furthermore, some libraries calculate angles in radians. Therfore, for example in BNO055 code we multiply by 57.2957795 to get degrees.*
+- *Raw values aren't in SI units (conversion is necessary for AHRS libraries), through some libraries we get the SI units by default but some of them calculate angles in radians. Therfore, for example in BNO055 code we multiply by 57.2957795 to get degrees.*
 - *We still didn't figure out how automatic magnetometer calibration routine should be done.*
 - **Any AHRS algorithm is too demanding for Arduino UNO**
 
@@ -51,6 +51,8 @@ Open the *MPU6050_2_raw_values_offsets* example. There are two ways to calibrate
 
 ### Angles:
 We shall use the Adafruit AHRS library. Remember that without the magnetometer only roll and pitch makes sense.
+
+Testing with quaternions and Adafruit app. https://adafruit.github.io/Adafruit_WebSerial_3DModelViewer/
 
 ### Notes: 
 - *ISM330DHCX is an industrial-grade version of LSM6DSOX with many enhancements.*
