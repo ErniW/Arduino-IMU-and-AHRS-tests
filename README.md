@@ -71,12 +71,13 @@ The magnetometer is a separate sensor on this board.
 2. Accelerometer and Gyroscope: calibrated via included code.
 
 ### Angles:
-There are libraries for these sensors from Pololu, Sparkfun and Adafruit. Each of them works well but we will stick to Adafruit as we are using Adafruit AHRS library.
+There are libraries for these sensors from Pololu, Sparkfun and Adafruit.We will stick to Adafruit as we are using Adafruit AHRS library.
 
 ### Notes:
 - *It's the same sensor you have on Adafruit Feather BLE.*
 - *LIS3MDL magnetometer frequency is faster than magnetometer in LSM9DS1.*
 - *You can use Adafruit library to use pedometer.*
+- *Pololu libraries are very basic, there is an AHRS example but there are more steps to make it running https://github.com/pololu/minimu-9-ahrs-arduino*
 
 ## Arduino Nano 33 BLE (LSM9DS1)
 ### Calibration:
