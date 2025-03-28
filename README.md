@@ -38,7 +38,7 @@ Open the *MPU6050_2_raw_values_offsets* example. There are two ways to calibrate
 **Adafruit Unified sensors and AHRS library** requires its Adafruit Calibration Library. We found it more difficult to use and measurements are worse than DMP.
 
 ### Notes:
-- **MPU-6050 is the cheapest among all. Usually cheapest sensors have significantly lower quality but not in this case thanks to DMP.**
+- **MPU-6050 is the cheapest among all. Usually cheapest sensors have significantly lower quality but not in this case thanks to DMP. During our classes don't buy the expensive MPU-6050 variants, the cheap one is enough.**
 - *For prototyping, in most cases MPU-6050 is enough if you need to measure tilt angle without relative heading (it doesn't have a magnetometer to do so). The MPU-9250 and ICM-20948 have magnetometer included.*
 - **DMP computes Euler angles or quaternions without wasting resources of your Arduino.**
 - *Using Mahony filter is not even close to quality of DMP.*

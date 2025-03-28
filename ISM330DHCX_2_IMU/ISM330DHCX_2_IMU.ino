@@ -37,6 +37,7 @@ void loop() {
   float pitch = filter.getPitch();
   float yaw = filter.getYaw();
 
+  Serial.print("Orientation: ");
   Serial.print(roll);
   Serial.print('\t');
   Serial.print(pitch);
