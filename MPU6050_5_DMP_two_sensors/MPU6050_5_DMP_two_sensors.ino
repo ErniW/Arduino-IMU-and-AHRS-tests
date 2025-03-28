@@ -1,20 +1,24 @@
 #include "I2Cdev.h"
-#include "MPU6050_6Axis_MotionApps_V6_12.h"
+#include "MPU6050_6Axis_MotionApps612.h"
 #include "Wire.h"
 
-MPU6050 mpu(0x68);
-MPU6050 mpu2(0x69);
+//Dear students, please be aware that this code heavily uses pointers.
+//Before using read about pointers and references.
 
-uint8_t fifoBuffer[64];
-uint8_t fifoBuffer2[64];
+MPU6050 mpu_1(0x68);
+MPU6050 mpu_2(0x69);
 
-Quaternion q;
-VectorFloat gravity;
-float ypr[3];
+typedef struct{
+  Quaternion q;
+  VectorFloat gravity;
+  float yaw;
+  float pitch;
+  float roll;
+  uint8_t buffer[64];
+} MPU6050_values;
 
-Quaternion q2;
-VectorFloat gravity2;
-float ypr2[3];
+MPU6050_values mpu_1_values;
+MPU6050_values mpu_2_values;
 
 void setup() {
   Wire.begin();
@@ -24,57 +28,61 @@ void setup() {
   Serial.begin(115200);
   while (!Serial); 
 
-  mpu.initialize();
-  mpu.dmpInitialize();
-  mpu.CalibrateAccel(6);
-  mpu.CalibrateGyro(6);
-
-  Serial.print(" Testing connection 1: ");
-  Serial.println(mpu.testConnection());
-  //mpu.PrintActiveOffsets();
-  
-  mpu.setDMPEnabled(true);
-
-  mpu2.initialize();
-  mpu2.dmpInitialize();
-  mpu2.CalibrateAccel(6);
-  mpu2.CalibrateGyro(6);
-  
-  Serial.print(" Testing connection 2: ");
-  Serial.println(mpu2.testConnection());
-  //mpu2.PrintActiveOffsets();
-
-  mpu2.setDMPEnabled(true);
+  mpuInit(&mpu_1);
+  mpuInit(&mpu_2);
 
   delay(1000);
 }
 
 void loop() {
   
-  if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) {
-    mpu.dmpGetQuaternion(&q, fifoBuffer);
-    mpu.dmpGetGravity(&gravity, &q);
-    mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+  if(mpu_1.dmpGetCurrentFIFOPacket(mpu_1_values.buffer)) {
+    mpuGetValues(&mpu_1, &mpu_1_values);
+
     Serial.print("Sensor 1: ypr\t");
-    Serial.print(ypr[0] * 180 / M_PI);
+    Serial.print(mpu_1_values.yaw);
     Serial.print("\t");
-    Serial.print(ypr[1] * 180 / M_PI);
+    Serial.print(mpu_1_values.pitch);
     Serial.print("\t");
-    Serial.print(ypr[2] * 180 / M_PI);
+    Serial.print(mpu_1_values.roll);
     Serial.println();
   }
 
-  if (mpu2.dmpGetCurrentFIFOPacket(fifoBuffer2)) {
-    mpu2.dmpGetQuaternion(&q2, fifoBuffer2);
-    mpu2.dmpGetGravity(&gravity2, &q2);
-    mpu2.dmpGetYawPitchRoll(ypr2, &q2, &gravity2);
+  if(mpu_2.dmpGetCurrentFIFOPacket(mpu_2_values.buffer)) {
+    mpuGetValues(&mpu_2, &mpu_2_values);
+
     Serial.print("Sensor 2: ypr\t");
-    Serial.print(ypr2[0] * 180 / M_PI);
+    Serial.print(mpu_2_values.yaw);
     Serial.print("\t");
-    Serial.print(ypr2[1] * 180 / M_PI);
+    Serial.print(mpu_2_values.pitch);
     Serial.print("\t");
-    Serial.print(ypr2[2] * 180 / M_PI);
+    Serial.print(mpu_2_values.roll);
     Serial.println();
   }
 
+}
+
+void mpuInit(MPU6050* device){
+  device->initialize();
+  device->dmpInitialize();
+  device->CalibrateAccel(6);
+  device->CalibrateGyro(6);
+
+  //device->PrintActiveOffsets();
+
+  // Serial.print("Testing connection: ");
+  // Serial.println(device->testConnection());
+
+  device->setDMPEnabled(true);
+}
+
+void mpuGetValues(MPU6050* device, MPU6050_values* values){
+    float ypr[3];
+    device->dmpGetQuaternion(&(values->q), values->buffer);
+    device->dmpGetGravity(&(values->gravity), &(values->q));
+    device->dmpGetYawPitchRoll(ypr, &(values->q), &(values->gravity));
+    
+    values->yaw = ypr[0] * 180 / M_PI;
+    values->pitch = ypr[1] * 180 / M_PI;
+    values->roll = ypr[2] * 180 / M_PI;
 }
