@@ -2,23 +2,26 @@
 #include "MPU6050_6Axis_MotionApps612.h"
 #include "Wire.h"
 
-//Dear students, please be aware that this code heavily uses pointers.
-//Before using read about pointers and references.
-
-MPU6050 mpu_1(0x68);
-MPU6050 mpu_2(0x69);
-
 typedef struct{
-  Quaternion q;
+  Quaternion qat;
   VectorFloat gravity;
   float yaw;
   float pitch;
   float roll;
-  uint8_t buffer[64];
 } MPU6050_values;
 
 MPU6050_values mpu_1_values;
 MPU6050_values mpu_2_values;
+
+//To set secondary address set pin AD0 to high, otherwise both will have address conflict.
+MPU6050 mpu_1(0x68);
+MPU6050 mpu_2(0x69);
+
+//Both devices share same buffer. If for whatever reason you've decided
+//to use RTOS or interrupts you should create separate buffer per device
+//and avoid overwriting values. Current code is safe because it parses
+//values from buffer immediately.
+uint8_t dataBuffer[64];
 
 void setup() {
   Wire.begin();
@@ -28,18 +31,22 @@ void setup() {
   Serial.begin(115200);
   while (!Serial); 
 
-  mpuInit(&mpu_1);
-  mpuInit(&mpu_2);
+  Serial.println("\nSensor 1 Init:");
+  mpuInit(mpu_1);
+
+  Serial.println("\nSensor 2 Init:");
+  mpuInit(mpu_2);
+  
 
   delay(1000);
 }
 
 void loop() {
   
-  if(mpu_1.dmpGetCurrentFIFOPacket(mpu_1_values.buffer)) {
-    mpuGetValues(&mpu_1, &mpu_1_values);
+  if(mpu_1.dmpGetCurrentFIFOPacket(dataBuffer)) {
+    mpuGetValues(mpu_1, mpu_1_values);
 
-    Serial.print("Sensor 1: ypr\t");
+    Serial.print("Sensor 1 ypr: \t");
     Serial.print(mpu_1_values.yaw);
     Serial.print("\t");
     Serial.print(mpu_1_values.pitch);
@@ -48,10 +55,10 @@ void loop() {
     Serial.println();
   }
 
-  if(mpu_2.dmpGetCurrentFIFOPacket(mpu_2_values.buffer)) {
-    mpuGetValues(&mpu_2, &mpu_2_values);
+  if(mpu_2.dmpGetCurrentFIFOPacket(dataBuffer)) {
+    mpuGetValues(mpu_2, mpu_2_values);
 
-    Serial.print("Sensor 2: ypr\t");
+    Serial.print("Sensor 2 ypr:\t");
     Serial.print(mpu_2_values.yaw);
     Serial.print("\t");
     Serial.print(mpu_2_values.pitch);
@@ -62,27 +69,27 @@ void loop() {
 
 }
 
-void mpuInit(MPU6050* device){
-  device->initialize();
-  device->dmpInitialize();
-  device->CalibrateAccel(6);
-  device->CalibrateGyro(6);
+void mpuInit(MPU6050& device){
+  device.initialize();
+  device.dmpInitialize();
+  device.CalibrateAccel(6);
+  device.CalibrateGyro(6);
 
-  //device->PrintActiveOffsets();
+  //device.PrintActiveOffsets();
 
   // Serial.print("Testing connection: ");
-  // Serial.println(device->testConnection());
+  // Serial.println(device.testConnection());
 
-  device->setDMPEnabled(true);
+  device.setDMPEnabled(true);
 }
 
-void mpuGetValues(MPU6050* device, MPU6050_values* values){
+void mpuGetValues(MPU6050& device, MPU6050_values& values){
     float ypr[3];
-    device->dmpGetQuaternion(&(values->q), values->buffer);
-    device->dmpGetGravity(&(values->gravity), &(values->q));
-    device->dmpGetYawPitchRoll(ypr, &(values->q), &(values->gravity));
+    device.dmpGetQuaternion(&values.qat, dataBuffer);
+    device.dmpGetGravity(&values.gravity, &values.qat);
+    device.dmpGetYawPitchRoll(ypr, &values.qat, &values.gravity);
     
-    values->yaw = ypr[0] * 180 / M_PI;
-    values->pitch = ypr[1] * 180 / M_PI;
-    values->roll = ypr[2] * 180 / M_PI;
+    values.yaw = ypr[0] * 180 / M_PI;
+    values.pitch = ypr[1] * 180 / M_PI;
+    values.roll = ypr[2] * 180 / M_PI;
 }

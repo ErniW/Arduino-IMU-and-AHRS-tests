@@ -51,7 +51,7 @@ void loop() {
     Serial.print("Orientation: ");
     Serial.print(yaw);
     Serial.print(',');
-    Serial.println(pitch);
+    Serial.print(pitch);
     Serial.print(',');
     Serial.println(roll);
 

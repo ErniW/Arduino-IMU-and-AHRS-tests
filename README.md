@@ -1,11 +1,11 @@
 **A series of tests made together with students for the purpose of one of our semester project at Industrial Design faculty. I decided to put it online as reference for future projects that require orientation sensing.**
 
 ## Sensors tested:
-### 6-dof:
+### 6-dof (Gyroscope + Accelerometer):
 - **MPU-6050**
 - **ISM330DHCX**
 
-### 9-dof
+### 9-dof (Gyroscope + Accelerometer + Magnetometer)
 - **Pololu MinIMU-9 v5 9DOF** (LSM6DS33 + LIS3MDL)
 - **LSM9DS1** in Arduino Nano 33 BLE
 - **BNO055** (Adafruit module)
@@ -13,17 +13,25 @@
 
 ## Methods of test:
 - Tests were made in similar conditions.
+- Tests were made with sensor grabbed in hand for basic gestures and then whole device inside enclosure (indirect movement).
+- Slow and fast movement.
+- Checking edge angles to cause gimbal lock.
 - We used similar calibration method for magnetometer. MotionCal is available for download here: https://www.pjrc.com/store/prop_shield.html Accelerometer and Gyro is not working here.
+- Testing with Adafruit app. https://adafruit.github.io/Adafruit_WebSerial_3DModelViewer/. Be aware of format how data must be send `Orientation: x,y,z` or `Quaternion: w,x,y,z`.
 
 ## Notes:
-- **6-dof IMUs are enough to measure tilt angle. For yaw/Z-axis rotation 9-dof is necessary**
-- **Check your calibration whenever the sensor is drifting. Without proper calibration it just won't work.** *It happens when values change without movement. However, remember that 6-dof Z-axis will never be correct comparing to 9-dof.*
-- **Seems that algorithm sampling rate, timing and frequency of sensor's measurements is the key to success.**
-- **Stick to quaternions in your code for calculations, convert to euler angles at the very end to avoid gimbal lock.** *Quaternions are 4 dimensional (w, x, y, z) representations of 3 dimensional rotations and are less intuitive to read.*
-- *Raw values can be useful to detect if object is shaking, moving or tilting toward one of its side.* **Sometimes you don't have to compute the euler angles.** *Furthermore, you can use a simpler complementary filter.*
-- *Raw values aren't in SI units (conversion is necessary for AHRS libraries), through some libraries we get the SI units by default but some of them calculate angles in radians. Therfore, for example in BNO055 code we multiply by 57.2957795 to get degrees. On the other hand, accelerometer values sometimes are described in G. 1G is equal to gravity acceleration approx 9.8m/s^2.*
+*I've included some further explanations - Ernest*
+- **6-dof IMUs are enough to measure tilt angle. For yaw/Z-axis rotation 9-dof (with magnetometer) or precise gyro calculation is necessary.**
+- Always include calibration code.
+- **Gyroscope data integration requires matching with defined frequency and updating data when new measurement is available. Period.** *It's difficult to do properly with Arduino libraries. Ideally we should avoid any delays and use interrupts. Without proper handling it just won't work. Depending on libraries it's handled differently. Our projects rarely requires advanced usage. It's an issue if your project requires all three axes or we really have to handle the z-axis.*
+- **Integration problems can be easily spotted if we rotate by 90 degrees but the axis moves by different angle and error accumulates over time.** (it integrates too much/few samples per second therefore error grows over time) It's issue with Z-axis which relies on gyroscope (unless we use magnetometer). Tilt measurements are dependent on accelerometer which doesn't drift but have noise in rapid movements.
+- **Drifting in gyroscope can be spotted if our axis moves by some small angle over time without any movement.** Technically drifting can't be avoided but we can marginalize it by proper callibration or compensation over time if device is running for hours. Usually libraries handle the compensation with accelerometer.
+- **Stick to quaternions in your code for calculations, eventually convert to euler angles to avoid gimbal lock.** *Quaternions are 4 dimensional (w, x, y, z) representations of 3 dimensional rotations and are less intuitive to read but are better for handling continuous movement.*
+- *Raw values can be useful to detect if object is shaking, is tapped, moving or tilting toward one of its side.* **Sometimes you don't have to compute the euler angles.** *Furthermore, you can use a simpler complementary filter without involving gyroscope.*
+- **Raw values aren't in SI units** *(conversion is necessary for AHRS libraries), through some libraries we get the SI units by default but some of them calculate angles in radians. Therfore, for example in BNO055 code we multiply by 57.2957795 to get degrees. Furthermore, accelerometer values sometimes are described in G. 1G is equal to gravity acceleration approx 9.8m/s^2. The raw value is scaled to match range of intiger depending on what G sensitivity we set. For example: 2G sensitivity will be scaled from -2G - 2G to -32768 - 32767. The 1G, which is gravity should show approx +/-16k on flat surface on one axis. Gyroscope sensitivity works in similar way.*
+- *For accelerometer noise can be reduced by averaging values or additional filtering.*
 - *We still didn't figure out how automatic magnetometer calibration routine should be done.*
-- **Any AHRS algorithm is too demanding for Arduino UNO** *Unless it's the only thing you want to do and not be very precise.*
+- **Any 9-dof AHRS algorithm is too demanding for Arduino UNO** *Unless it's the only thing you want to do and not be very precise. 6-dof IMU can work fine.*
 
 # Sensors usage:
 ## MPU-6050
@@ -51,8 +59,6 @@ Open the *MPU6050_2_raw_values_offsets* example. There are two ways to calibrate
 
 ### Angles:
 We shall use the Adafruit AHRS library. Remember that without the magnetometer only roll and pitch makes sense.
-
-Testing with quaternions and Adafruit app. https://adafruit.github.io/Adafruit_WebSerial_3DModelViewer/
 
 ### Notes: 
 - *ISM330DHCX is an industrial-grade version of LSM6DSOX with many enhancements.*
@@ -91,7 +97,7 @@ We are using a sketch which sends quaternions to Adafruit web app https://adafru
 
 **The position becomes stable and eventually correct after a short time. Achieving zero-drift correct orientation seems impossible during frequent movements.**
 
-**The problem is the Yaw value - try rotating around Z-axis and after a few 360 degree rotations you see how delayed the movement is.** Magnetometer is set to 20hz frequency which is slow for AHRS. We've changed its Output Data Rate to 80hz and fast ODR `LSM9DS1_CTRL_REG1_M` and the performance mode. But we couldn't see the difference. Documentation https://www.st.com/resource/en/datasheet/lsm9ds1.pdf
+**The problem is the Yaw value - try rotating around Z-axis and after a few 360 degree rotations you see how delayed the movement is.** Magnetometer is set to 20hz frequency which is slow for AHRS. We've changed its Output Data Rate to 80hz and fast ODR `LSM9DS1_CTRL_REG1_M` and the performance mode. Documentation https://www.st.com/resource/en/datasheet/lsm9ds1.pdf
 
 **Different frequency/update ratio somehow fixes the issue, check the difference in v2 version.**
 
@@ -99,7 +105,7 @@ Furthermore, LSM9DS1 magnetometer has different direction of X and Y axes. *You 
 
 **Things that could improve the measurements:**
 - Improve calibration, apply something to additionaly reduce noise?
-- **Measurement frequency ratio?**
+- **Measurement frequency ratio? Read notes on Gyro integration problems.**
 - Different AHRS algorithm? Adafruit contains Mahony, Madgwick and NXP Sensor Fusion.
 
 ### Notes:
@@ -115,6 +121,7 @@ Furthermore, LSM9DS1 magnetometer has different direction of X and Y axes. *You 
 Reading quaternions is recommended by manufacturer. Later you can convert them to euler angles.
 
 ### Notes:
-- *For demanding projects, to be honest, if you can and your project can afford it, just buy BNO055 (or equivalent) sensor module for Arduino.* **The real-time calibration and build-in AHRS fusion algorithm saves a lot of headaches and time.** *Especially it does matter when you have to frequently change device orienation axis, based on my observation, other sensors mentioned just lose their orientation. However, for basic scenarios there is no reason to buy it.*
+- **For demanding projects, to be honest, if you can and your project can afford it, just buy BNO055 (or equivalent) sensor module for Arduino. The real-time calibration and build-in AHRS fusion algorithm saves a lot of headaches and time.** *("Personally I don't understand why students never value their time so they waste it on figuring things too complex for them or buying the cheapest sensor shipped from China wasting one or two classes to get it while price difference isn't worth it at all. It's a problem with any kind of project." - Ernest)*
+- Quality of measurements especially matter when you have to frequently change device orienation axis, based on my observation, other sensors mentioned just lose their orientation. However, for basic scenarios there is no reason to buy it.*
 - *This particular version doesn't have any double tap, gesture nor pedometer sensor.*
 - **Computations are made internally so it doesn't waste Arduino resources.**
