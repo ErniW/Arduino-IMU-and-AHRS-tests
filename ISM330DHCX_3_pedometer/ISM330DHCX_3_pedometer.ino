@@ -2,6 +2,9 @@
 #include <Wire.h>
 
 /*
+  This is a register-level i2c implementation because library doesn't 
+  handle pedometer for ISM330.
+
   FUNC_CFG_ACCESS enables and disables embedded functions registers
   where pedometer is located. It switches the register addresses 
   so if you want to access default registers you need to disable it
