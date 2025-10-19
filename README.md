@@ -87,9 +87,9 @@ There are libraries for these sensors from Pololu, Sparkfun and Adafruit. We wil
 
 ## Arduino Nano 33 BLE (with LSM9DS1) DEPRECATED
 **Why it's deprecated?**
-1. The newer version of board has a different sensor and access to interrupt pin.
-2. Without interrupts it's impossible to compute delta time along with Bluetooth LE communication.
-3. Let's be honest - the first time I got it, the library was unusable and example usage is more like a failed attempt to make it work, stopped wasting my time at some point.
+1. The newer version of board has a different sensor but still no access to interrupt pin.
+2. Without interrupts it's impossible to compute delta time along with Bluetooth LE communication. It still relies on polling method.
+3. Let's be honest - the first time I got it, the library was unusable and my example usage is more like a failed attempt to make it work, stopped wasting my time at some point.
 4. In 2025 there are probably better alternatives. For example - equivalent board form adafruit includes Li-Po battery unit.
 
 ## BNO055
