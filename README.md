@@ -7,7 +7,7 @@
 
 ### 9-dof (Gyroscope + Accelerometer + Magnetometer)
 - **Pololu MinIMU-9 v5 9DOF** (LSM6DS33 + LIS3MDL)
-- **LSM9DS1** in Arduino Nano 33 BLE
+- **LSM9DS1** in Arduino Nano 33 BLE (temporaily deprecated)
 - **BNO055** (Adafruit module)
 - *ICM-20948 *Not included, tested as 6-dof in 2021*
 
@@ -16,28 +16,30 @@
 - Tests were made with sensor grabbed in hand for basic gestures and then whole device inside enclosure (indirect movement).
 - Slow and fast movement.
 - Checking edge angles to cause gimbal lock.
-- We used similar calibration method for magnetometer. MotionCal is available for download here: https://www.pjrc.com/store/prop_shield.html Accelerometer and Gyro is not working here.
+- We used same calibration method for magnetometer. MotionCal is available for download here: https://www.pjrc.com/store/prop_shield.html Accelerometer and Gyro is not working here.
 - Tested with Adafruit app. https://adafruit.github.io/Adafruit_WebSerial_3DModelViewer/. Be aware of format how data must be send `Orientation: x,y,z` or `Quaternion: w,x,y,z`.
 
 ## Notes:
 ### General info:
 - Always include calibration code.
 - For tap/shake detection or simple tilting accelerometer is enough.
-- *We still didn't figure out how automatic magnetometer calibration routine should be done.*
-- *For some projects, especially 9-DOF with other things working on, 16 MHz Arduino UNO might not be sufficient.*
+- Arduino UNO R3 might not be sufficient in terms of performance and available memory. *Unless there is not much else going on there, eventually MPU6050 doesn't waste Arduino resources.*
 ### Gyroscope & timing:
 - **Gyroscope data integration requires matching with defined frequency and updating data when new measurement is available. Period. Interrupt-based delta time measurement yields better results than fixed timing.** *Unfortunately it requires extra effort on Arduino libraries which are very limited on this thing. Our projects never required such precision but ideally, use interrupts to immediately catch available gyroscope data. Secondly, measure delta t with internal timer instead of fixed period (don't lose time by rounding fractions!). Accelerometer doesn't need integration.*
-- **Integration problems can be easily spotted if we rotate by 90 degrees but the axis moves by different angle and error accumulates over time.** It integrates too much/few samples per second therefore error grows over time. 
-- **Drifting in gyroscope can be spotted if our axes move by some small angle over time without any movement.** Technically drift can't be avoided but we can marginalize it by proper callibration along with accelerometer compensation. Furthermore, including small threshold to avoid noise on still object really does its job. Eventually use Kalman filter.
-- **Because of strict timing use millis() instead of delay().**
+- **Integration problems can be easily spotted if we rotate by 90 degrees but the axis moves by different angle and error accumulates over time.** Error grows over time because we integrate too much/few samples per second therefore. 
+- **Drift in gyroscope can be spotted if our axes move by some small angle over time without any movement.** Technically drift can't be avoided but we can marginalize it by proper callibration along with accelerometer compensation. Furthermore, including a small threshold to avoid noise on still object really does its job. Eventually use Kalman filter. Magnetometer can be used for long-term compensation.
+- **Because of strict timing use millis() instead of delay() and micros() to compute delta time (to not lose fractions).**
 ### Units and conversion:
 - **Stick to quaternions in your code for calculations, eventually convert to euler angles at the end of computation to avoid gimbal lock.** *Quaternions are 4 dimensional (w, x, y, z) representations of 3 dimensional rotations and are less intuitive to read but are better for handling continuous movement.*
-- Whenever you mix libraries, **check what SI units they operate and what units are expected by your algorithm.** *Some device libraries return raw values, others return SI units by default. Usually it's a conversion between radians and degrees per second.*
-- To get SI unit we multiply raw value by its sensitivity.
+- Arduino libraries are inconsistent so whenever you mix libraries, **check what SI units they operate and what units are expected by your algorithm.** *Some device libraries return raw values, others return SI units by default. Usually it's a conversion between radians and degrees per second.*
+- To get SI unit we multiply raw value by its sensitivity. Usually done by library.
+### Magnetometer:
+- *To be honest, there is a huge misunderstanding on how magnetometer can be used for Arduino projects. The only scenario during our classes is requirement for common heading between at least two objects. It's used for navigation related projects which we don't do. Using it properly is difficult.*
+- *We still didn't figure out how automatic magnetometer calibration routine should be done so we use motioncal.*
 
 # Sensors usage:
 ## MPU-6050
-**We are using the commonly used MPU6050 library and DMP. For our classes this sensor is enough as we rarely need relative heading of 9-DOF systems.**
+**We are using the commonly used MPU6050 library and DMP. For our classes this sensor is enough as we almost never need absolute heading of 9-DOF systems.**
 ### Calibration:
 Open the *MPU6050_2_raw_values_offsets* example. There are two ways to calibrate the sensor:
 - Use `CalibrateAccel` and `CalibrateGyro` to do that automatically.
@@ -61,6 +63,7 @@ Code returns both quaternions and euler angles, it's interrupt based with simple
 - *ISM330DHCX has built-in tilt direction, double tap, pedometer and free falling detection.*
 - *It's compatible with Adafruit LSM6DS library. Unfortunately things like pedometer and double tap aren't implemented. I made my own implementation but it requires basic understanding of bare-metal programming.*
 - *ISM330DHCX doesn't contain DMP but has Finite State Machine and Machine Learning Core for gesture recognition. ST provides iNEMO engine AHRS fusion algorithm but unfortunately it seems they removed it.* **Anyway, advanced features aren't possible to use on Arduino platform so it's not worth buying in our case.**
+- *If IMU example doesn't work please check if your Arduino has different interrupt handling.*
 
 
 ## Pololu MinIMU-9 v5 9DOF
@@ -70,7 +73,7 @@ The magnetometer is a separate sensor on this board.
 
 ### Calibration:
 1. Magnetometer: MotionCal. Upload the calibration code and open the app.
-2. Accelerometer and Gyroscope: calibrated via included code.
+2. Accelerometer and Gyroscope: calibrated via included code. AHRS example already has the gyro calibration included.
 
 ### Orientation:
 There are libraries for these sensors from Pololu, Sparkfun and Adafruit. We will stick to Adafruit as we are using Adafruit AHRS library.
@@ -79,7 +82,8 @@ There are libraries for these sensors from Pololu, Sparkfun and Adafruit. We wil
 - *It's the same sensor you have on Adafruit Feather BLE.*
 - *LIS3MDL magnetometer frequency is faster than magnetometer in LSM9DS1.*
 - *You can use Adafruit library to use pedometer.*
-- *Pololu libraries are very basic, there is an AHRS example but there are more steps to make it running https://github.com/pololu/minimu-9-ahrs-arduino*
+- *Pololu libraries are very basic, there is an AHRS example but there are more steps to make it running https://github.com/pololu/minimu-9-ahrs-arduino*.
+- *Need to investigate if magnetometer has flipped axes.*
 
 ## Arduino Nano 33 BLE (with LSM9DS1) DEPRECATED
 **Why it's deprecated?**
@@ -96,7 +100,7 @@ There are libraries for these sensors from Pololu, Sparkfun and Adafruit. We wil
 Reading quaternions is recommended by manufacturer. Later you can convert them to euler angles.
 
 ### Notes:
-- **For demanding projects, to be honest, if you can and your project can afford it, just buy BNO055 (or equivalent) sensor module for Arduino. The real-time calibration and build-in AHRS fusion algorithm saves a lot of headaches and time.** *("Personally I don't understand why students never value their time so they waste it on figuring things too complex for them or buying the cheapest sensor shipped from China wasting one or two classes to get it while price difference isn't worth it at all. It's a problem with any kind of project." - Ernest)*
-- Quality of measurements especially matter when you have to frequently change device orienation axis, based on my observation, other sensors mentioned just lose their orientation. However, for basic scenarios there is no reason to buy it.*
+- For demanding projects, to be honest, if you can and your project can afford it, just buy BNO055 (this one is an old one so maybe newer/equivalent version). **The real-time calibration and build-in AHRS fusion algorithm saves a lot of headaches and time. But your project probably isn't THAT demanding.** *Quality of measurements especially matter on frequent orientation change. Based on my observation, eventually other sensors mentioned start losing it on rapid changes. However, those scenarios were extreme so there is no reason to buy it.*
 - *This particular version doesn't have any double tap, gesture nor pedometer sensor.*
+- It's update rate is up to 100Hz.
 - **Computations are made internally so it doesn't waste Arduino resources.**
