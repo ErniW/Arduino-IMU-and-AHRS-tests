@@ -33,7 +33,7 @@
 - *To be honest, there is a huge misunderstanding on how magnetometer can be used for Arduino projects. The only scenario during our classes is requirement for common heading between at least two objects. It's used for navigation related projects which we don't do. Using it properly is difficult.*
 - *We still didn't figure out how automatic magnetometer calibration routine should be done so we use motioncal.*
 ### Misc:
-- Always include calibration code. Some examples directly includes gyroscope calibration. After each start of sketch, give it some time to calibrate.
+- Always include calibration code. Some examples directly includes gyroscope calibration - *after each start of sketch, give it some time to calibrate.*
 - For tap/shake detection or simple tilting accelerometer is enough.
 - Arduino UNO R3 might not be sufficient in terms of performance and available memory. *Unless there is not much else going on there, eventually MPU6050 doesn't waste Arduino resources.*
 
@@ -85,21 +85,17 @@ There are libraries for these sensors from Pololu, Sparkfun and Adafruit. We wil
 - *Pololu libraries are very basic, there is an AHRS example but there are more steps to make it running https://github.com/pololu/minimu-9-ahrs-arduino*.
 - *Need to investigate if magnetometer has flipped axes.*
 
-## Arduino Nano 33 BLE (with LSM9DS1) DEPRECATED
-**Why it's deprecated?**
-1. The newer version of board has a different sensor but still no access to interrupt pin.
-2. Without interrupts it's impossible to compute delta time along with Bluetooth LE communication. It still relies on polling method.
-3. Let's be honest - the first time I got it, the library was unusable and my example usage is more like a failed attempt to make it work, eventually stopped wasting my time on this at some point.
-4. In 2025 there are probably better alternatives. For example - equivalent board form adafruit includes Li-Po battery unit.
+## Arduino Nano 33 BLE (with LSM9DS1) 
 
-### Some info:
-- The X and Y axes are inversed. (requires confirmation)
-- The code is deprecated but the IMU example still works.
-- Arduino equivalent of Adafruit AHRS libraries are confusing.
+### Calibration:
+- Use MotionCal.
+- Gyro calibration is on startup.
 
-### What must be fixed:
-- For some (probably stupid) reasons I can't set reversed unit conversion to fit motioncal requirements. Send a pull request if you can fix this.
-
+### Notes
+- The X and Y axes are inversed on gyro and accel? (requires confirmation)
+- **Instead of Arduino libraries made for this board, we are using Adafruit libraries.** *In fact, the Arduino libraries looks unfinished. Let's be honest - the first time I got it, the Arduino library was unusable and my example usage was a failed attempt to make it work, eventually stopped wasting my time on this at some point.*
+- The newer version of board has a different sensor but still no access to interrupt pin. *Without interrupt pin it's difficult to write non-polling code along with Bluetooth LE communication. This might be a performance (and integration) bottleneck.*
+- *In 2025 there are probably better alternatives. For example - equivalent board form adafruit includes Li-Po battery unit.*
 
 ## BNO055
 ### Calibration:
