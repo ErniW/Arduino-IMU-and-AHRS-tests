@@ -8,11 +8,11 @@ Adafruit_Madgwick filter;
 
 unsigned long timestamp = 0;
 
-float mag_hardIron[3] = {49.29, -34.35, -58.99};
+float mag_hardIron[3] = {55.21, -50.13, -68.45};
 float mag_softIron[9] = {
-  0.995, 0.025, 0.003,
-  0.025, 0.989, -0.006,
-  0.003, -0.006, 1.017
+  0.992, 0.020, 0.018,
+  0.020, 1.002, -0.017,
+  0.018, -0.017, 1.007
 };
 
 float accel_calibration[3] = {-0.01, 0.06, 0.01};
