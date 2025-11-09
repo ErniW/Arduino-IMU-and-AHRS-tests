@@ -20,10 +20,6 @@
 - Tested with Adafruit app. https://adafruit.github.io/Adafruit_WebSerial_3DModelViewer/. Be aware of format how data must be send `Orientation: x,y,z` or `Quaternion: w,x,y,z`.
 
 ## Notes:
-### General info:
-- Always include calibration code.
-- For tap/shake detection or simple tilting accelerometer is enough.
-- Arduino UNO R3 might not be sufficient in terms of performance and available memory. *Unless there is not much else going on there, eventually MPU6050 doesn't waste Arduino resources.*
 ### Gyroscope & timing:
 - **Gyroscope data integration requires matching with defined frequency and updating data when new measurement is available. Period. Interrupt-based delta time measurement yields better results than fixed timing.** *Unfortunately it requires extra effort on Arduino libraries which are very limited on this thing. Our projects never required such precision but ideally, use interrupts to immediately catch available gyroscope data. Secondly, measure delta t with internal timer instead of fixed period (don't lose time by rounding fractions!). Accelerometer doesn't need integration.*
 - **Integration problems can be easily spotted if we rotate by 90 degrees but the axis moves by different angle and error accumulates over time.** Error grows over time because we integrate too much/few samples per second therefore. 
@@ -36,6 +32,10 @@
 ### Magnetometer:
 - *To be honest, there is a huge misunderstanding on how magnetometer can be used for Arduino projects. The only scenario during our classes is requirement for common heading between at least two objects. It's used for navigation related projects which we don't do. Using it properly is difficult.*
 - *We still didn't figure out how automatic magnetometer calibration routine should be done so we use motioncal.*
+### Misc:
+- Always include calibration code. Some examples directly includes gyroscope calibration. After each start of sketch, give it some time to calibrate.
+- For tap/shake detection or simple tilting accelerometer is enough.
+- Arduino UNO R3 might not be sufficient in terms of performance and available memory. *Unless there is not much else going on there, eventually MPU6050 doesn't waste Arduino resources.*
 
 # Sensors usage:
 ## MPU-6050
@@ -89,8 +89,17 @@ There are libraries for these sensors from Pololu, Sparkfun and Adafruit. We wil
 **Why it's deprecated?**
 1. The newer version of board has a different sensor but still no access to interrupt pin.
 2. Without interrupts it's impossible to compute delta time along with Bluetooth LE communication. It still relies on polling method.
-3. Let's be honest - the first time I got it, the library was unusable and my example usage is more like a failed attempt to make it work, stopped wasting my time at some point.
+3. Let's be honest - the first time I got it, the library was unusable and my example usage is more like a failed attempt to make it work, eventually stopped wasting my time on this at some point.
 4. In 2025 there are probably better alternatives. For example - equivalent board form adafruit includes Li-Po battery unit.
+
+### Some info:
+- The X and Y axes are inversed. (requires confirmation)
+- The code is deprecated but the IMU example still works.
+- Arduino equivalent of Adafruit AHRS libraries are confusing.
+
+### What must be fixed:
+- For some (probably stupid) reasons I can't set reversed unit conversion to fit motioncal requirements. Send a pull request if you can fix this.
+
 
 ## BNO055
 ### Calibration:
