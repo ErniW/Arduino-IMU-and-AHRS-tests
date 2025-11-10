@@ -21,12 +21,12 @@
 
 ## Notes:
 ### Gyroscope & timing:
-- **Gyroscope data integration requires matching with defined frequency and updating data when new measurement is available. Period. Interrupt-based delta time measurement yields better results than fixed timing.** *Unfortunately it requires extra effort on Arduino libraries which are very limited on this thing. Our projects never required such precision but ideally, use interrupts to immediately catch available gyroscope data. Secondly, measure delta t with internal timer instead of fixed period (don't lose time by rounding fractions!). Accelerometer doesn't need integration.*
-- **Integration problems can be easily spotted if we rotate by 90 degrees but the axis moves by different angle and error accumulates over time.** Error grows over time because we integrate too much/few samples per second therefore. 
+- **Gyroscope data integration requires matching with defined frequency and updating data when new measurement is available. Period. Interrupt-based delta time measurement yields better results than fixed timing.** *Unfortunately it requires extra effort on Arduino libraries which are limited. Our projects never required such precision but ideally, use interrupts to immediately catch available gyroscope data. Secondly, measure delta t with internal timer instead of fixed period (don't lose time by rounding fractions!). Accelerometer doesn't need integration.*
+- **Integration problems can be easily spotted if we rotate by 90 degrees but the axis moves by different angle and error accumulates over time.** Error grows over time because we integrate too much/few samples per second. 
 - **Drift in gyroscope can be spotted if our axes move by some small angle over time without any movement.** Technically drift can't be avoided but we can marginalize it by proper callibration along with accelerometer compensation. Furthermore, including a small threshold to avoid noise on still object really does its job. Eventually use Kalman filter. Magnetometer can be used for long-term compensation.
-- **Because of strict timing use millis() instead of delay() and micros() to compute delta time (to not lose fractions).**
+- **Because of strict timing use micros() to compute delta time (to not lose fractions). Avoid delay().**
 ### Units and conversion:
-- **Stick to quaternions in your code for calculations, eventually convert to euler angles at the end of computation to avoid gimbal lock.** *Quaternions are 4 dimensional (w, x, y, z) representations of 3 dimensional rotations and are less intuitive to read but are better for handling continuous movement.*
+- **Stick to quaternions in your code for calculations, eventually convert to euler angles at the end of computation to avoid gimbal lock.** *Quaternions are 4 dimensional (w, x, y, z) representations of 3 dimensional rotations and are less intuitive to read but are better for handling continuous movement. Convert if you need interaction for a specific angle.*
 - Arduino libraries are inconsistent so whenever you mix libraries, **check what SI units they operate and what units are expected by your algorithm.** *Some device libraries return raw values, others return SI units by default. Usually it's a conversion between radians and degrees per second.*
 - To get SI unit we multiply raw value by its sensitivity. Usually done by library.
 ### Magnetometer:
@@ -92,7 +92,7 @@ There are libraries for these sensors from Pololu, Sparkfun and Adafruit. We wil
 - Gyro calibration is on startup.
 
 ### Notes
-- The X and Y axes are inversed on gyro and accel? (requires confirmation)
+- *The X and Y axes are inversed on gyro and accel? (requires confirmation)*
 - **Instead of Arduino libraries made for this board, we are using Adafruit libraries.** *In fact, the Arduino libraries looks unfinished. Let's be honest - the first time I got it, the Arduino library was unusable and my example usage was a failed attempt to make it work, eventually stopped wasting my time on this at some point.*
 - The newer version of board has a different sensor but still no access to interrupt pin. *Without interrupt pin it's difficult to write non-polling code along with Bluetooth LE communication. This might be a performance (and integration) bottleneck.*
 - *In 2025 there are probably better alternatives. For example - equivalent board form adafruit includes Li-Po battery unit.*
@@ -105,7 +105,7 @@ There are libraries for these sensors from Pololu, Sparkfun and Adafruit. We wil
 Reading quaternions is recommended by manufacturer. Later you can convert them to euler angles.
 
 ### Notes:
-- For demanding projects, to be honest, if you can and your project can afford it, just buy BNO055 (this one is an old one so maybe newer/equivalent version). **The real-time calibration and build-in AHRS fusion algorithm saves a lot of headaches and time. But your project probably isn't THAT demanding.** *Quality of measurements especially matter on frequent orientation change. Based on my observation, eventually other sensors mentioned start losing it on rapid changes. However, those scenarios were extreme so there is no reason to buy it.*
+- *For demanding projects, to be honest, if you can and your project can afford it, just buy BNO055 (this one is an old one so maybe newer/equivalent version).* **The real-time calibration and build-in AHRS fusion algorithm saves a lot of headaches and time. But your project probably isn't THAT demanding.** *Quality of measurements especially matter on frequent orientation change. Based on my observation, eventually other sensors mentioned start losing it on rapid changes. However, those scenarios were extreme so there is no reason to buy it.*
 - *This particular version doesn't have any double tap, gesture nor pedometer sensor.*
 - It's update rate is up to 100Hz.
 - **Computations are made internally so it doesn't waste Arduino resources.**
